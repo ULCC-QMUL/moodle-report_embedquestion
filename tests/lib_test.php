@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tests for report library functions.
+ * Tests for the Embedded questions progress Moodle core integration.
  *
- * @package    report_log
- * @copyright  2014 onwards Ankit agarwal <ankit.agrr@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
+ * @package   report_embedquestion
+ * @copyright 2019 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,7 +30,6 @@ require_once(__DIR__ . '/../lib.php');
 /**
  * Tests for the Embedded questions progress Moodle core integration.
  *
- * @package   report_embedquestion
  * @copyright 2019 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
  */
@@ -80,5 +79,27 @@ class report_embedquestion_lib_testcase extends advanced_testcase {
         $this->assertEquals('Embedded questions progress', $reportnode->get_content());
         $this->assertEquals(new moodle_url('/report/embedquestion/activity.php',
                 ['cmid' => $activity->cmid]), $reportnode->action());
+    }
+
+    public function test_report_embedquestion_questions_in_use_detects_question_in_use() {
+        $this->markTestSkipped('This test cannot pass until MDL-67947 has been integrated. Skipping.');
+
+        $this->resetAfterTest();
+
+        $attemptgenerator = $this->getDataGenerator()->get_plugin_generator('filter_embedquestion');
+        $user = $this->getDataGenerator()->create_user();
+        $question = $attemptgenerator->create_embeddable_question('truefalse');
+        $attemptgenerator->create_attempt_at_embedded_question($question, $user, 'True');
+
+        $this->assertTrue(questions_in_use([$question->id]));
+    }
+
+    public function test_report_embedquestion_questions_in_use_does_not_report_unattempted_question() {
+        $this->resetAfterTest();
+
+        $attemptgenerator = $this->getDataGenerator()->get_plugin_generator('filter_embedquestion');
+        $question = $attemptgenerator->create_embeddable_question('truefalse');
+
+        $this->assertFalse(questions_in_use([$question->id]));
     }
 }

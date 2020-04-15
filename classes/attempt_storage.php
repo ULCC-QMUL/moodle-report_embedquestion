@@ -92,18 +92,24 @@ class attempt_storage extends \filter_embedquestion\attempt_storage {
         if ($quba->get_owning_component() != 'report_embedquestion') {
             throw new \moodle_exception('notyourattempt', 'filter_embedquestion');
         }
-        if ($quba->get_owning_context()->id != $context->id) {
-            throw new \moodle_exception('notyourattempt', 'filter_embedquestion');
-        }
 
         $attemptinfo = $DB->get_record('report_embedquestion_attempt',
                 ['questionusageid' => $quba->get_id()], '*', MUST_EXIST);
 
-        if ($attemptinfo->contextid != $context->id) {
+        if ($attemptinfo->contextid != $quba->get_owning_context()->id) {
             throw new \moodle_exception('notyourattempt', 'filter_embedquestion');
         }
         if ($USER->id !== $attemptinfo->userid) {
             require_capability('report/embedquestion:viewallprogress', $context);
         }
+    }
+
+    public function delete_attempt(\question_usage_by_activity $quba) {
+        global $DB;
+
+        $transaction = $DB->start_delegated_transaction();
+        \question_engine::delete_questions_usage_by_activity($quba->get_id());
+        $DB->delete_records('report_embedquestion_attempt', ['questionusageid' => $quba->get_id()]);
+        $transaction->allow_commit();
     }
 }
